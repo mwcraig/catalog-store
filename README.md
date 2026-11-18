@@ -8,12 +8,15 @@ and a radius and it returns the catalog rows in that cone as an astropy
 `Table`. No network, no database server. A cone search on a 785-million-row
 copy of ATLAS-REFCAT2 takes a few hundredths of a second.
 
-This package only reads. Stores are written by
-[stellarphot](https://github.com/feder-observatory/stellarphot)
-(`stellarphot.catalog_backends.write_local_store`), which is where this code
-was extracted from. The on-disk layout is described in
+The package also writes stores: `write_store` for any catalog you have as a
+table, and a `build-refcat2-store` command that builds ATLAS-REFCAT2 from the
+files MAST distributes. See [Writing a store](#writing-a-store) below.
+
+The on-disk layout is described in
 [docs/store-format.md](docs/store-format.md), so a store can also be written
-or read by other tools.
+or read by other tools. The code was extracted from
+[stellarphot](https://github.com/feder-observatory/stellarphot), whose own
+stores are in the same format.
 
 ## Install
 
@@ -25,7 +28,7 @@ Requires Python 3.11 or later, numpy, pyarrow and astropy. The reader is the
 single file `src/catalog_store_reader/reader.py`, which can also be copied
 into another project as is.
 
-## Use
+## Reading a store
 
 ```python
 from astropy import units as u
@@ -34,12 +37,12 @@ from astropy.coordinates import SkyCoord
 from catalog_store_reader import CatalogStore
 
 store = CatalogStore("/path/to/store")
-store.catalog_ids                # ('J/ApJ/867/105/refcat2',)
+store.catalog_ids  # ('J/ApJ/867/105/refcat2',)
 
 stars = store.cone_search(
-    "refcat2",                              # or "J/ApJ/867/105/refcat2"
-    SkyCoord(135.55, 49.84, unit="deg"),    # any frame; one position
-    10 * u.arcmin,                          # a bare number means degrees
+    "refcat2",  # or "J/ApJ/867/105/refcat2"
+    SkyCoord(135.55, 49.84, unit="deg"),  # any frame; one position
+    10 * u.arcmin,  # a bare number means degrees
     column_filters={"rmag": "<=16"},
 )
 ```
@@ -90,16 +93,51 @@ A sub-directory whose manifest cannot be used is skipped with a
 `CatalogStoreWarning` when the store is opened; the other catalogs still
 work.
 
+## Writing a store
+
+### ATLAS-REFCAT2
+
+```
+build-refcat2-store --tiles /data/00_m_16 --tiles /data/16_m_17 --out /srv/catalogs
+```
+
+builds `/srv/catalogs/refcat2` from the tile files MAST distributes, with the
+column names, units and blanks VizieR serves for `J/ApJ/867/105/refcat2`.
+[docs/building-refcat2.md](docs/building-refcat2.md) covers where to download
+the tiles, how much disk each depth needs and how long a build takes.
+
+### Any other catalog
+
+```python
+from catalog_store_reader import write_store
+
+write_store(
+    table,  # an astropy Table, or an iterable of Tables
+    "/srv/catalogs",
+    "mycat",  # directory name
+    "J/A+A/000/00/mycat",  # identifier queries will use
+    "RAJ2000",  # coordinate columns, ICRS degrees
+    "DEJ2000",
+    version="where this copy came from",
+)
+```
+
+Masked values are stored as blanks and come back masked. A catalog too large
+for memory can be passed as an iterable of tables. Writing over an existing
+catalog builds the new copy alongside it and switches in one step, so an
+interrupted write leaves the old copy in place.
+
 ## Tests
 
 ```
 uv run --group test pytest
 ```
 
-`tests/data/store` is a 187-star store written by stellarphot's real writer;
-`tests/data/make_golden_store.py` regenerates it. The other test stores are
-built on the fly by a small writer in `tests/conftest.py` that follows the
-format document.
+`tests/data/store` is a 187-star store written by stellarphot's writer, so
+the reader is tested against a store this package did not write;
+`tests/data/make_golden_store.py` regenerates it. `tests/data/tiles` holds
+excerpts of eight real REFCAT2 tiles covering the same field; the builder
+must turn them into exactly the values VizieR returned for it.
 
 ## License
 

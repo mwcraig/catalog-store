@@ -1,4 +1,4 @@
-"""Cone searches on an offline copy of an astronomical catalog."""
+"""Cone searches on an offline copy of an astronomical catalog, and writing one."""
 
 from .reader import (
     STORE_FORMAT,
@@ -8,6 +8,7 @@ from .reader import (
     CatalogStoreWarning,
     CatalogUnavailableError,
 )
+from .writer import write_store
 
 __all__ = [
     "STORE_FORMAT",
@@ -16,4 +17,5 @@ __all__ = [
     "CatalogStore",
     "CatalogStoreWarning",
     "CatalogUnavailableError",
+    "write_store",
 ]

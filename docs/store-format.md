@@ -1,8 +1,9 @@
 # Store format, version 1
 
-This describes what `catalog-store-reader` reads. The format string in the
-manifest is `stellarphot-catalog-store` because stellarphot's
-`write_local_store` defined it.
+This describes what `catalog-store-reader` reads and writes. The format
+string in the manifest is `stellarphot-catalog-store` because stellarphot's
+`write_local_store` defined it; this package's `write_store` is the same
+code.
 
 ## Layout
 
@@ -49,12 +50,12 @@ Zones with no rows have no directory.
 - The two coordinate columns named by the manifest are floating-point ICRS
   degrees, with right ascension in the range 0 to 360.
 - Within each file, rows are sorted by right ascension and written in small
-  row groups (20,000 rows in stellarphot's writer). This is what makes a cone
+  row groups (20,000 rows in `write_store`). This is what makes a cone
   search fast: the reader pushes a right-ascension and declination bounding
   box into the scan, and row-group statistics let it skip nearly all of a
   zone. A store without the sorting is still read correctly, only slowly.
-- Compression is zstd in stellarphot's writer; the reader accepts any codec
-  pyarrow can read.
+- Compression is zstd in `write_store`; the reader accepts any codec pyarrow
+  can read.
 
 File names inside a zone directory do not matter.
 
@@ -105,8 +106,13 @@ the store's sky coverage and returns no rows.
 
 ## Replacing a store
 
-stellarphot's writer builds a new `data-<timestamp>-<token>` directory, then
+`write_store` builds a new `data-<timestamp>-<token>` directory, then
 replaces `catalog.json` in one step so that `data_dir` points at it, then
 removes the old data directory. A reader opened before the switch keeps the
 old `data_dir` and will raise `CatalogUnavailableError` once that directory
 is gone; open the store again to pick up the new one.
+
+`build-refcat2-store` works differently, because a build of that size needs
+to be resumable: it removes the manifest first, writes into `data/`, and
+writes the manifest last. The catalog is absent from the store while it
+builds.

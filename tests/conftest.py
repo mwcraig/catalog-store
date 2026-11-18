@@ -1,12 +1,10 @@
 """
 Shared test helpers.
 
-``write_store`` is a deliberately small writer used to build stores with
-particular shapes (three zones, stars at the poles, a shallow store...). It
-follows ``docs/store-format.md`` and is NOT the production writer: real stores
-are written by stellarphot's ``write_local_store``. The golden store in
-``tests/data/store`` was written by that function, so the reader is also
-tested against the real thing.
+Most test stores are written on the fly with this package's own
+``write_store``. The golden store in ``tests/data/store`` was written by
+stellarphot's ``write_local_store`` instead, so the reader is also tested
+against a store this package did not write.
 """
 
 import json
@@ -14,81 +12,15 @@ import shutil
 from pathlib import Path
 
 import numpy as np
-import pyarrow as pa
-import pyarrow.dataset as ds
 import pytest
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 
+from catalog_store_reader import write_store
+
 DATA = Path(__file__).parent / "data"
 REFCAT2_ID = "J/ApJ/867/105/refcat2"
 STARS_ID = "test/stars"
-
-
-def write_store(
-    table,
-    root,
-    name,
-    catalog_id,
-    ra_col,
-    dec_col,
-    mag_limit=None,
-    zone_deg=1.0,
-    record_zones=True,
-):
-    """Write ``table`` to ``root / name`` as a store and return that path."""
-    cat_dir = Path(root) / name
-    data_dir = cat_dir / "data-test"
-    shutil.rmtree(cat_dir, ignore_errors=True)
-    data_dir.mkdir(parents=True)
-
-    columns = {}
-    units = {}
-    for colname in table.colnames:
-        column = table[colname]
-        if column.unit is not None:
-            units[colname] = column.unit.to_string()
-        values = np.ma.asarray(column)
-        mask = np.ma.getmaskarray(values)
-        data = np.ma.getdata(values)
-        if data.dtype.kind == "U":
-            columns[colname] = pa.array(
-                [None if m else str(v) for v, m in zip(data, mask, strict=True)],
-                type=pa.string(),
-            )
-        else:
-            columns[colname] = pa.array(data, mask=mask)
-    dec = np.asarray(table[dec_col], dtype=float)
-    zone = np.floor((dec + 90) / zone_deg).astype(np.int16)
-    columns["zone"] = pa.array(zone, type=pa.int16())
-    arrow_table = pa.table(columns).sort_by(
-        [("zone", "ascending"), (ra_col, "ascending")]
-    )
-    ds.write_dataset(
-        arrow_table,
-        data_dir,
-        format="parquet",
-        partitioning=ds.partitioning(pa.schema([("zone", pa.int16())]), flavor="hive"),
-    )
-    manifest = dict(
-        format="stellarphot-catalog-store",
-        format_version=1,
-        vizier_id=catalog_id,
-        name=name,
-        layout="dec_zone_parquet",
-        zone_deg=zone_deg,
-        ra_col=ra_col,
-        dec_col=dec_col,
-        data_dir=data_dir.name,
-        rows=len(table),
-        version="written by the tests",
-        mag_limit=mag_limit,
-        units=units,
-    )
-    if record_zones:
-        manifest["zones"] = sorted(int(z) for z in np.unique(zone))
-    (cat_dir / "catalog.json").write_text(json.dumps(manifest, indent=1))
-    return cat_dir
 
 
 def read_manifest(root, name):
@@ -103,8 +35,21 @@ def stars(names, ras, decs):
     return Table({"Name": names, "RAJ2000": ras, "DEJ2000": decs})
 
 
-def write_stars(table, root, **kwargs):
-    return write_store(table, root, "stars", STARS_ID, "RAJ2000", "DEJ2000", **kwargs)
+def write_stars(table, root, record_zones=True, **kwargs):
+    """
+    Write ``table`` as the ``stars`` catalog in ``root``.
+
+    With ``record_zones=False`` the zone list is removed from the manifest,
+    as in stores written before zones were recorded.
+    """
+    cat_dir = write_store(
+        table, root, "stars", STARS_ID, "RAJ2000", "DEJ2000", **kwargs
+    )
+    if not record_zones:
+        manifest = read_manifest(root, "stars")
+        del manifest["zones"]
+        (cat_dir / "catalog.json").write_text(json.dumps(manifest))
+    return cat_dir
 
 
 def star_names(store, ra, dec, radius):
