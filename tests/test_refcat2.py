@@ -14,8 +14,8 @@ import pytest
 from astropy import units as u
 from conftest import DATA, REFCAT2_ID, data_dir, read_manifest, refcat2_table
 
-from catalog_store_reader import CatalogStore, CatalogStoreWarning
-from catalog_store_reader.refcat2 import build_refcat2_store, main
+from catalog_store import CatalogStore, CatalogStoreWarning
+from catalog_store.refcat2 import build_refcat2_store, main
 
 TILES = DATA / "tiles"
 BINS = ["00_m_16", "16_m_17", "17_m_18", "18_m_19"]

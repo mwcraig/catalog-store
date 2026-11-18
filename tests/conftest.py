@@ -16,7 +16,7 @@ import pytest
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
 
-from catalog_store_reader import write_store
+from catalog_store import write_store
 
 DATA = Path(__file__).parent / "data"
 REFCAT2_ID = "J/ApJ/867/105/refcat2"

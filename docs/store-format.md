@@ -1,6 +1,6 @@
 # Store format, version 1
 
-This describes what `catalog-store-reader` reads and writes. The format
+This describes what `catalog-store` reads and writes. The format
 string in the manifest is `stellarphot-catalog-store` because stellarphot's
 `write_local_store` defined it; this package's `write_store` is the same
 code.

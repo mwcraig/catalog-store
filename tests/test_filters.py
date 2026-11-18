@@ -5,7 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.table import MaskedColumn, Table
 
-from catalog_store_reader.reader import (
+from catalog_store.reader import (
     _apply_column_filters,
     _arrow_to_masked_table,
     _filter_expression,

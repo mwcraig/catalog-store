@@ -9,7 +9,7 @@ edge of the faintest one::
 
     build-refcat2-store --tiles 00_m_16 --tiles 16_m_17 --out /srv/catalogs
 
-or ``python -m catalog_store_reader.refcat2`` with the same arguments.
+or ``python -m catalog_store.refcat2`` with the same arguments.
 ``docs/building-refcat2.md`` in the repository has the download locations,
 sizes and timings.
 

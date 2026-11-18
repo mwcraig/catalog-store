@@ -16,7 +16,7 @@ from conftest import (
     write_stars,
 )
 
-from catalog_store_reader import CatalogStore, write_store
+from catalog_store import CatalogStore, write_store
 
 
 def _write_refcat2(root, **kwargs):

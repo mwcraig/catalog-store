@@ -1,5 +1,5 @@
 """
-Write a catalog store that `~catalog_store_reader.CatalogStore` can read.
+Write a catalog store that `~catalog_store.CatalogStore` can read.
 
 `write_store` takes a catalog as an astropy table, or as an iterable of
 tables for a catalog too large to hold in memory. ``docs/store-format.md``
@@ -42,7 +42,7 @@ def write_store(
     zone_deg=1.0,
 ):
     """
-    Write a catalog as a store that `~catalog_store_reader.CatalogStore` reads.
+    Write a catalog as a store that `~catalog_store.CatalogStore` reads.
 
     Parameters
     ----------

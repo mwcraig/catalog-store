@@ -19,13 +19,13 @@ from conftest import (
     write_stars,
 )
 
-from catalog_store_reader import (
+from catalog_store import (
     CatalogNotFoundError,
     CatalogStore,
     CatalogStoreWarning,
     CatalogUnavailableError,
 )
-from catalog_store_reader.reader import _apply_column_filters
+from catalog_store.reader import _apply_column_filters
 
 # ---------------------------------------------------------------------------
 # Opening a store and finding catalogs in it

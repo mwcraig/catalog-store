@@ -1,4 +1,4 @@
-# catalog-store-reader
+# catalog-store
 
 Cone searches on an offline copy of an astronomical catalog.
 
@@ -25,7 +25,7 @@ pip install .
 ```
 
 Requires Python 3.11 or later, numpy, pyarrow and astropy. The reader is the
-single file `src/catalog_store_reader/reader.py`, which can also be copied
+single file `src/catalog_store/reader.py`, which can also be copied
 into another project as is.
 
 ## Reading a store
@@ -34,7 +34,7 @@ into another project as is.
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from catalog_store_reader import CatalogStore
+from catalog_store import CatalogStore
 
 store = CatalogStore("/path/to/store")
 store.catalog_ids  # ('J/ApJ/867/105/refcat2',)
@@ -109,7 +109,7 @@ the tiles, how much disk each depth needs and how long a build takes.
 ### Any other catalog
 
 ```python
-from catalog_store_reader import write_store
+from catalog_store import write_store
 
 write_store(
     table,  # an astropy Table, or an iterable of Tables

@@ -98,7 +98,7 @@ existing copy of the catalog first.
 The same build from Python:
 
 ```python
-from catalog_store_reader.refcat2 import build_refcat2_store
+from catalog_store.refcat2 import build_refcat2_store
 
 build_refcat2_store(
     ["/data/refcat2/00_m_16", "/data/refcat2/16_m_17"],
@@ -112,7 +112,7 @@ build_refcat2_store(
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from catalog_store_reader import CatalogStore
+from catalog_store import CatalogStore
 
 store = CatalogStore("/srv/catalogs")
 print(store.manifest("refcat2")["rows"])
